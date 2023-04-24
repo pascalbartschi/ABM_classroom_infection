@@ -164,12 +164,14 @@ observe <- function(university){
 }
 
 
-simulate_university <- function(beta = 0.001,
-                                no_of_rooms = 3, 
-                                room_size = 30,
-                                days = 21, 
-                                classes_per_day = 3, 
-                                week_init_stu_ratio = 0.1){
+simulate_university <- function(beta = 0.001,             # functional infection coef
+                                no_of_rooms = 3,          # number of rooms in university
+                                room_size = 30,           # roomsize of classroom
+                                days = 21,                # simulated days
+                                classes_per_day = 3,      # representative for interactions
+                                week_init_stu_ratio = 0.1 # ratio of students whick come infected from WE
+                                )
+  {
   
   ###
   # simulation concept:
