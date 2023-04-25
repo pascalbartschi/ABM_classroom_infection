@@ -13,9 +13,10 @@ library(tidyverse)
 ## agents for simulation
 
 # this function generates a student with given id, initially healthy
-generate_student <- function(sid){
+generate_student <- function(sid, pos = c(NA, NA)){
   # create list
   student = list(sid = sid, 
+                 pos = pos,
                  sick = FALSE, 
                  athome = FALSE)
   
@@ -26,10 +27,18 @@ generate_student <- function(sid){
 
 # this function generates a classroom with input id and size, 
 # holds number of students of given size
-generate_classroom <- function(cid, size){
-  # create a list 
+generate_classroom <- function(cid, 
+                               size, # classsize,
+                              spacing, 
+                              area# space between people in m2
+                               )
+  {
+  # create a list classroom , which is always a sqaure
+  # we defined, that space from wall is equal to space from students
   classroom = list(cid = cid, 
-                   size = size,
+                   size = size,       # number of students room holds
+                   spacing = spacing, # space between students
+                   area = area, 
                    students = NA,
                    sick_count = 0)
   
@@ -40,13 +49,19 @@ generate_classroom <- function(cid, size){
 
 
 # this function fills a university with students and classrooms
-generate_university <- function(no_of_stu, no_of_rooms, room_size){
+generate_university <- function(no_of_rooms, 
+                                room_size, 
+                                room_spacing){
   # initialize list
   university <- list()
   # append frame to list
-  university$frame <- list(no_of_stu = no_of_stu,
+  room_area = (room_spacing * (room_size**0.5 + 2)) ** 2 # m2
+  
+  university$frame <- list(no_of_stu = no_of_rooms * room_size,
                           no_of_rooms = no_of_rooms,
-                          room_size = room_size)
+                          # room_size = room_size, 
+                          room_spacing = room_spacing,
+                          room_area = room_area)
   
   # generate and append students to university sublist students
   university$students <- list()
@@ -60,7 +75,9 @@ generate_university <- function(no_of_stu, no_of_rooms, room_size){
   
   for (cid in 1:no_of_rooms){
     university$classrooms[[cid]] <- generate_classroom(cid = cid, 
-                                                      size = room_size)
+                                                      size = room_size, 
+                                                       spacing = room_spacing, 
+                                                       area = room_area)
   }
   
   # set a class title university
@@ -76,6 +93,7 @@ fill_classroom <- function(university){
   no_of_stu <- university$frame$no_of_stu
   no_of_rooms <- university$frame$no_of_rooms
   room_size <- university$frame$room_size
+  room_spacing <- university$frame$room_spacing
   
   
   ## idea: use remainder to set groups on randomly sorted ids
@@ -86,9 +104,17 @@ fill_classroom <- function(university){
   classes <- split(student_ids,
                    student_ids%%no_of_rooms)
   
+  coord <- seq(0, university$frame$room_area**0.5, university$frame$room_spacing)[2:as.integer(university$frame$room_area**0.5 - 1)]
+  xy <- expand_grid(x = coord, y= coord) # combn(x = coord, m = 2)
+  
   # insert classes into classroom sublist students
-  for (i in 1:length(classes)){
-    university$classrooms[[i]]$students <- classes[[i]]
+  for (cid in 1:length(classes)){
+    university$classrooms[[cid]]$students <- classes[[cid]]
+    counter <- 0
+    for (sid in classes[[cid]]){
+      counter <- counter + 1
+      university$students[[sid]]$pos <- as.numeric(xy[counter,])
+    }
     # print(university$classroom[[i]]$students)
   }
   
