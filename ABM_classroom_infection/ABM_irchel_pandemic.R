@@ -18,7 +18,8 @@ generate_student <- function(sid, pos = c(NA, NA)){
   student = list(sid = sid, 
                  pos = pos,
                  sick = FALSE, 
-                 athome = FALSE)
+                 athome = FALSE,
+                 sick_neighbours = 0)
   
   # set class
   class(student) <- "student"
@@ -55,9 +56,9 @@ generate_university <- function(no_of_rooms,
   # initialize list
   university <- list()
   # append frame to list
-  room_area = (room_spacing * (room_size**0.5 + 2)) ** 2 # m2
-  
-  university$frame <- list(no_of_stu = no_of_rooms * room_size,
+  room_area <- (room_spacing * (room_size**0.5 + 2)) ** 2 # m2
+  no_of_stu <- no_of_rooms * room_size
+  university$frame <- list(no_of_stu = no_of_stu,
                           no_of_rooms = no_of_rooms,
                           # room_size = room_size, 
                           room_spacing = room_spacing,
@@ -122,29 +123,40 @@ fill_classroom <- function(university){
 }
 
 
-update_sickness <- function(university){
-  for (i_cr in 1:no_of_rooms){
+update_sickness <- function(university, radius_factor = 1, beta = 0.0001){
+  for (i_cr in 1:university$frame$no_of_rooms){
     # extract student indices
     students <- university$classrooms[[i_cr]]$students
     # set sick count to zero
-    university$classrooms[[i_cr]]$sick_count <- 0
+    # university$classrooms[[i_cr]]$sickathome_count <- 0
     # count sick students in classroom
+
     for (i_st in students){
-      # delayed probability: students that went home infected people in class: reason distinguish previous sick from after class sick
-      if (!university$students[[i_st]]$sick & university$students[[i_st]]$athome){ # removed not 
-        university$classrooms[[i_cr]]$sick_count <- university$classrooms[[i_cr]]$sick_count + 1
+      for(i_neigh in students){
+        pos_stu <- university$students[[i_st]]$pos
+        pos_neigh <- university$students[[i_neigh]]$pos
+        # print(c(pos_stu, pos_neigh))
+        if (all(pos_neigh != pos_stu)){
+          if (((pos_neigh[1] - pos_stu[1])**2 + (pos_neigh[2] - pos_stu[2])**2)**0.5 <= radius_factor * university$frame$room_spacing * 2**0.5){
+            # delayed probability: students that went home infected people in class: reason distinguish previous sick from after class sick
+            if (!university$students[[i_neigh]]$sick & university$students[[i_neigh]]$athome){
+              university$students[[i_st]]$sick_neighbours <- university$students[[i_st]]$sick_neighbours + 1
+            }
+          }
+        }
       }
     }
+  }
+  for (i_stu in 1:university$frame$no_of_stu){
     # calculate probability to be infected in this classroom
-    p_cr <- 1 - ((1 - beta)**university$classrooms[[i_cr]]$sick_count)
-    for (i_st in students)
-      # check whether not sick and not at home to turn sick
-      if (!university$students[[i_st]]$sick & !university$students[[i_st]]$athome){
-        # draw random number in probability distribution
-        r <- runif(n = 1, min = 0, max = 1)
-        if (p_cr > r){
-          # set student to sick if true
-          university$students[[i_st]]$sick <- TRUE
+    p_infect <- 1 - ((1 - beta)**university$students[[i_stu]]$sick_neighbours)
+    # check whether not sick and not at home to turn sick
+    if (!university$students[[i_stu]]$sick & !university$students[[i_stu]]$athome){
+      # draw random number in probability distribution
+      r <- runif(n = 1, min = 0, max = 1)
+      if (p_infect > r){
+        # set student to sick if true
+        university$students[[i_stu]]$sick <- TRUE
         }
       }
   }
@@ -191,7 +203,9 @@ observe <- function(university){
 
 
 simulate_university <- function(beta = 0.001,             # functional infection coef
+                                radius_factor = 1,        # descides which amount of n can infect, fraction of spacing
                                 no_of_rooms = 3,          # number of rooms in university
+                                room_spacing = 1,         # space between students in m
                                 room_size = 30,           # roomsize of classroom
                                 days = 21,                # simulated days
                                 classes_per_day = 3,      # representative for interactions
@@ -215,7 +229,7 @@ simulate_university <- function(beta = 0.001,             # functional infection
   sick_student_start <- as.integer(no_of_stu * week_init_stu_ratio) # sick students at start of every x
   
   # initialize network
-  irchel <- generate_university(no_of_stu, no_of_rooms, room_size)
+  irchel <- generate_university(no_of_rooms, room_size, room_spacing)
   
   # grid to store
   day_attendance <- expand.grid(class = c(1:classes_per_day), 
@@ -232,7 +246,7 @@ simulate_university <- function(beta = 0.001,             # functional infection
   # index for grid
   i <- 0
   for (day in 1:days){
-  
+    # print(day)
     if (day%%7 == 0){
       # after weekend, all people are healthy again
       irchel <- student_recovery(irchel)
@@ -250,13 +264,12 @@ simulate_university <- function(beta = 0.001,             # functional infection
       # go home after day if sick
       irchel <- after_day_gohome(irchel)
       # spreading desease, only people not at home are counted
-      irchel <- update_sickness(irchel)
+      irchel <- update_sickness(irchel, radius_factor, beta)
     
     }
   }
   return(day_attendance)
 }
-
 
 
 
