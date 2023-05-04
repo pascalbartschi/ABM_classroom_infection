@@ -90,6 +90,11 @@ generate_university <- function(no_of_rooms,
 
 fill_classroom <- function(university){
   
+  # set all neighbours count to zero
+  for (i_st in 1:length(university$students)){
+    university$students[[i_st]]$sick_neighbours <- 0
+  }
+  
   # extract the frame variables
   no_of_stu <- university$frame$no_of_stu
   no_of_rooms <- university$frame$no_of_rooms
