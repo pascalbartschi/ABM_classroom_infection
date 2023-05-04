@@ -12,17 +12,18 @@ source("ABM_irchel_pandemic.R")
 ## simulation
 # initialize
 # model dimensions
-beta <- 0.001
-no_of_rooms <- 3
-room_size <- 25
-room_spacing <- 1
-days <- 14
-classes_per_day <- 3
-week_init_stu_ratio <- 0.1
-radius_factor <- 1
+beta <- 1e-1      # only magnitude of .1 seems realistic
+no_of_rooms <- 6  # controls total number of classrooms
+room_size <- 25   # hyperparameter
+room_spacing <- 1 # hyperparameter
+days <- 31        # controls number of students
+classes_per_day <- 3 # controls randomness
+week_init_stu_ratio <- 0.1  # how many students come in sick from weekend
+viral_radius_factor <- 1 # viral radius relative to room spacing hardcode to become vrf * 1/spacing
+
 
 sim <- simulate_university(beta = beta,
-                           radius_factor = radius_factor,
+                           viral_radius_factor = viral_radius_factor,
                            no_of_rooms = no_of_rooms, 
                            room_size = room_size,
                            room_spacing = room_spacing,
@@ -34,8 +35,11 @@ sim %>%
 mutate_at(c("day", "class", "attendance"), as.numeric) %>%
 filter(class == 1) %>%
 select(-class) %>%
+mutate(athome_per_day = ifelse(c(0, diff(attendance)) > 0, 0, -c(0, diff(attendance)))) %>%
 ggplot() + 
-geom_path(mapping = aes(x = day, y = attendance)) +
+geom_path(mapping = aes(x = day, y = athome_per_day), linetype = "dashed") +
+geom_point(mapping = aes(x = day, y = athome_per_day)) +
 theme_bw()
+
 
 
