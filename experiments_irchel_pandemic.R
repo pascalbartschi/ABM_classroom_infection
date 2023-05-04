@@ -12,7 +12,7 @@ source("ABM_irchel_pandemic.R")
 beta <- 0.001 # fixed
 no_of_rooms <- 30
 room_size <- 25
-room_spacing <- 1
+room_spacing <- 3
 days <- 3
 classes_per_day <- 3
 week_init_stu_ratio <- 0.1

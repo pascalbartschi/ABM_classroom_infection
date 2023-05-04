@@ -13,7 +13,7 @@ library(tidyverse)
 ## agents for simulation
 
 # this function generates a student with given id, initially healthy
-generate_student <- function(sid, pos = c(NA, NA)){
+generate_student <- function(sid, pos = c(0, 0)){
   # create list
   student = list(sid = sid, 
                  pos = pos,
@@ -110,8 +110,12 @@ fill_classroom <- function(university){
   classes <- split(student_ids,
                    student_ids%%no_of_rooms)
   
-  coord <- seq(0, university$frame$room_area**0.5, university$frame$room_spacing)[2:as.integer(university$frame$room_area**0.5 - 1)]
+  coord <- seq(0, university$frame$room_area**0.5, university$frame$room_spacing)
+  coord_mask <- c(2:(length(coord)-1)) # slice first and last element (border)
+  coord <- coord[coord_mask]
   xy <- expand_grid(x = coord, y= coord) # combn(x = coord, m = 2)
+  # print("coord")
+  # print(coord)
   
   # insert classes into classroom sublist students
   for (cid in 1:length(classes)){
@@ -128,7 +132,7 @@ fill_classroom <- function(university){
 }
 
 
-update_sickness <- function(university, viral_radius_factor = 1, beta = 0.0001){
+update_sickness <- function(university, viral_radius = 1, beta = 0.0001){
   for (i_cr in 1:university$frame$no_of_rooms){
     # extract student indices
     students <- university$classrooms[[i_cr]]$students
@@ -140,9 +144,14 @@ update_sickness <- function(university, viral_radius_factor = 1, beta = 0.0001){
       for(i_neigh in students){
         pos_stu <- university$students[[i_st]]$pos
         pos_neigh <- university$students[[i_neigh]]$pos
+        # print("euclidian dist")
+        # print(((pos_neigh[1] - pos_stu[1])**2 + (pos_neigh[2] - pos_stu[2])**2)**0.5)
+        # print("spacing")
+        # print(viral_radius * university$frame$room_spacing * 2**0.5)
+        # print(pos_neight, pos_stu)
         # print(c(pos_stu, pos_neigh))
         if (all(pos_neigh != pos_stu)){
-          if (((pos_neigh[1] - pos_stu[1])**2 + (pos_neigh[2] - pos_stu[2])**2)**0.5 <= viral_radius_factor * university$frame$room_spacing * 2**0.5){
+          if (((pos_neigh[1] - pos_stu[1])**2 + (pos_neigh[2] - pos_stu[2])**2)**0.5 <= viral_radius){#viral_radius_factor * university$frame$room_spacing * 2**0.5){
             # delayed probability: students that went home infected people in class: reason distinguish previous sick from after class sick
             if (!university$students[[i_neigh]]$sick & university$students[[i_neigh]]$athome){
               university$students[[i_st]]$sick_neighbours <- university$students[[i_st]]$sick_neighbours + 1
@@ -208,7 +217,7 @@ observe <- function(university){
 
 
 simulate_university <- function(beta = 0.001,             # functional infection coef
-                                viral_radius_factor = 1,  # descides which amount of n can infect, fraction of spacing
+                                viral_radius = 1,  # descides which amount of n can infect, fraction of spacing
                                 no_of_rooms = 3,          # number of rooms in university
                                 room_spacing = 1,         # space between students in m
                                 room_size = 30,           # roomsize of classroom
@@ -226,14 +235,15 @@ simulate_university <- function(beta = 0.001,             # functional infection
   # one class is randomly filled, people which are sick go home, but are counted for infection probability (sick F, home T)
   # people that are infected are counted in attendance (sick T, home F) in next class infect, and go home and so on
   ###
-  
+  if (viral_radius <= room_spacing * 2**0.5){stop("Please put viral radius > room_spacing, otherwise nobody is affected")}
+  else if (viral_radius == room_spacing){warning("Only direct neighbours, not diagonal neighbours can be infected.")}
   ## students
   # number
   no_of_stu <- no_of_rooms * room_size
   # sick ratio
   sick_student_start <- as.integer(no_of_stu * week_init_stu_ratio) # sick students at start of every x
   # radius factor
-  viral_radius_factor <- viral_radius_factor * (1/room_spacing) # normalization of the spacing factor
+  viral_radius <- viral_radius * (1/room_spacing) # normalization of the spacing factor
   
   # initialize network
   irchel <- generate_university(no_of_rooms, room_size, room_spacing)
@@ -268,14 +278,17 @@ simulate_university <- function(beta = 0.001,             # functional infection
       day_attendance$attendance[i] <- observe(irchel)
       # everyone goes to class, also ones at home
       irchel <- fill_classroom(irchel)
+      # print(paste("day:",day, "class", c))
+      # for (s in irchel$students){print(s$pos)}
       # go home after day if sick
       irchel <- after_day_gohome(irchel)
       # spreading desease, only people not at home are counted
-      irchel <- update_sickness(irchel, viral_radius_factor, beta)
+      irchel <- update_sickness(irchel, viral_radius, beta)
     
     }
   }
-  return(day_attendance)
+  return(list(result = day_attendance,
+              irchel = irchel))
 }
 
 
