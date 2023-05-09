@@ -18,14 +18,14 @@ classes_per_day <- 1 # controls randomness
 week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
-file_name <- "room_spacing_0.1to1"
-values <- seq(0.1, 1, length = 10)
+filename <- "room_spacing_0.3to0.9by0.3"
+values <- seq(0.3, 0.9, by = 0.3) #c(0.95, 0.8, 0.6)
 number_of_values <- length(values)
 number_of_sims_per_value <- 10
 
 ########################## DO NOT CHANGE ANYTHING BELOW HERE ######################################
 
-if (!filename){stop("Please provide a filename!")}
+# if (!filename){stop("Please provide a filename!")}
 
 storage_simulations <- expand.grid(class = c(1:classes_per_day), 
                                   day = c(1:days))
@@ -75,10 +75,10 @@ for (i in 1:number_of_values) {
   }
   means <- apply(X = as.matrix(temp_store_sim %>% select(starts_with("sim"))),
                 MARGIN = c(1), 
-                FUN = mean)
+                FUN = mean) / (room_size * no_of_rooms) * 100 # in percent
   stds <- apply(X = as.matrix(temp_store_sim %>% select(starts_with("sim"))),
                 MARGIN = c(1), 
-                FUN = std)
+                FUN = std) / (room_size * no_of_rooms) * 100 # in percent
   
   storage_simulations <- cbind(means, stds, storage_simulations)
   colnames(storage_simulations)[1:2] <- c(paste0("sim_", values[i], "_mean"), paste0("sim_", values[i], "_std"))
@@ -91,15 +91,25 @@ value_means_day <- apply(X = storage_matrix_mean_day,
                          FUN = mean)
 
 value_means_week <- apply(X = storage_matrix_mean_week, 
+                          MARGIN = c(1), 
+                          FUN = mean)
+
+value_stds_day <- apply(X = storage_matrix_mean_day, 
+                        MARGIN = c(1), 
+                        FUN = sd)
+
+value_stds_week <- apply(X = storage_matrix_mean_week, 
                          MARGIN = c(1), 
-                         FUN = mean)
+                         FUN = sd)
 
 summary_df <- data.frame(value = values, 
-              mean_week = value_means_week,
-              mean_day = value_means_day, 
-              area = storage_matrix_areas[1,])
+                         mean_week = value_means_week,
+                         mean_day = value_means_day, 
+                         sd_week = value_stds_week,
+                         sd_day = value_stds_day, 
+                         area = storage_matrix_areas[1,])
 
-sim_results <- list(sim_store = simulation_storage,
+sim_results <- list(sim_store = storage_simulations,
                     summary = summary_df, 
                     values = values,
                     file = filename)

@@ -19,7 +19,7 @@ week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
 filename <- "room_size_16to49"
-values <- c(4**2, 5**2, 6**2)
+values <- c(4**2, 5**2, 6**2, 7**2)
 number_of_values <- length(values)
 number_of_sims_per_value <- 10
 
@@ -37,12 +37,13 @@ storage_matrix_areas <- matrix(nrow = 1, ncol = number_of_values)
 for (i in 1:number_of_values) {
   # simulate of couple of times to later take mean
   temp_store_sim <- expand.grid(class = c(1:classes_per_day), day = c(1:days))
+  room_size <- values[i]
   for (j in 1:number_of_sims_per_value) {
-  
+
     sim <- simulate_university(beta = beta,
                                viral_radius = viral_radius,
                                no_of_rooms = no_of_rooms, 
-                               room_size = values[i],
+                               room_size = room_size,
                                room_spacing = room_spacing,
                                days = days, 
                                classes_per_day = classes_per_day, 
@@ -75,15 +76,19 @@ for (i in 1:number_of_values) {
   }
   means <- apply(X = as.matrix(temp_store_sim %>% select(starts_with("sim"))),
                 MARGIN = c(1), 
-                FUN = mean)
+                FUN = mean) / (room_size * no_of_rooms) * 100 # in percent
   stds <- apply(X = as.matrix(temp_store_sim %>% select(starts_with("sim"))),
                 MARGIN = c(1), 
-                FUN = sd)
+                FUN = sd) / (room_size * no_of_rooms) * 100 # in percent
+  
   
   storage_simulations <- cbind(means, stds, storage_simulations)
   colnames(storage_simulations)[1:2] <- c(paste0("sim_", values[i], "_mean"), paste0("sim_", values[i], "_std"))
   storage_matrix_areas[1,i] <- sim$irchel$classrooms[[1]]$area
 }
+
+# storage_simulations <- storage_simulations %>% mutate_at(vars(matches("sim")), 
+#                                                          function(x){return (x / (room_size * no_of_rooms))})
 
 
 value_means_day <- apply(X = storage_matrix_mean_day, 
@@ -94,9 +99,19 @@ value_means_week <- apply(X = storage_matrix_mean_week,
                          MARGIN = c(1), 
                          FUN = mean)
 
+value_stds_day <- apply(X = storage_matrix_mean_day, 
+                         MARGIN = c(1), 
+                         FUN = sd)
+
+value_stds_week <- apply(X = storage_matrix_mean_week, 
+                          MARGIN = c(1), 
+                          FUN = sd)
+
 summary_df <- data.frame(value = values, 
               mean_week = value_means_week,
               mean_day = value_means_day, 
+              sd_week = value_stds_week,
+              sd_day = value_stds_day, 
               area = storage_matrix_areas[1,])
 
 
