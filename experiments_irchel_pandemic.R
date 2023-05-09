@@ -19,7 +19,7 @@ week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
 number_of_values <- 10
-values_room_spacing <- seq(0.1, 1, length = 10)
+values_room_spacing <- seq(0.1, 1, length = number_of_values)
 number_of_sims_per_value <- 10
 
 storage_matrix_mean_day <- matrix(nrow = number_of_values, ncol = number_of_sims_per_value, NA)
