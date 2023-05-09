@@ -287,6 +287,7 @@ simulate_university <- function(beta = 0.001,             # functional infection
     
     }
   }
+  day_attendance <- day_attendance %>% mutate_all(., as.numeric)
   return(list(result = day_attendance,
               irchel = irchel))
 }
