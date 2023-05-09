@@ -11,21 +11,21 @@ source("ABM_irchel_pandemic.R")
 
 beta <- 1e-1      # only magnitude of .1 seems realistic
 no_of_rooms <- 8  # controls total number of classrooms
-room_size <- 25   # hyperparameter, square number please
-# room_spacing <- 1.0 # hyperparameter: MUST BE <=1
+# room_size <- 25   # hyperparameter, square number please
+room_spacing <- 1.0 # hyperparameter: MUST BE <=1
 days <- 28    # controls number of students
 classes_per_day <- 1 # controls randomness
 week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
-file_name <- "room_spacing_0.1to1"
-number_of_values <- 10
-values <- seq(0.1, 1, length = number_of_values)
+filename <- "room_size_16to49"
+values <- c(4**2, 5**2, 6**2)
+number_of_values <- length(values)
 number_of_sims_per_value <- 10
 
 ########################## DO NOT CHANGE ANYTHING BELOW HERE ######################################
 
-if (!filename){stop("Please provide a filename!")}
+# if (!filename){stop("Please provide a filename!")}
 
 storage_simulations <- expand.grid(class = c(1:classes_per_day), 
                                   day = c(1:days))
@@ -42,8 +42,8 @@ for (i in 1:number_of_values) {
     sim <- simulate_university(beta = beta,
                                viral_radius = viral_radius,
                                no_of_rooms = no_of_rooms, 
-                               room_size = room_size,
-                               room_spacing = values[i],
+                               room_size = values[i],
+                               room_spacing = room_spacing,
                                days = days, 
                                classes_per_day = classes_per_day, 
                                week_init_stu_ratio = week_init_stu_ratio)
@@ -78,10 +78,10 @@ for (i in 1:number_of_values) {
                 FUN = mean)
   stds <- apply(X = as.matrix(temp_store_sim %>% select(starts_with("sim"))),
                 MARGIN = c(1), 
-                FUN = std)
+                FUN = sd)
   
   storage_simulations <- cbind(means, stds, storage_simulations)
-  colnames(storage_simulations)[1:2] <- c(paste0("sim_", i, "_mean"), paste0("sim_", i, "_std"))
+  colnames(storage_simulations)[1:2] <- c(paste0("sim_", values[i], "_mean"), paste0("sim_", values[i], "_std"))
   storage_matrix_areas[1,i] <- sim$irchel$classrooms[[1]]$area
 }
 
@@ -99,7 +99,8 @@ summary_df <- data.frame(value = values,
               mean_day = value_means_day, 
               area = storage_matrix_areas[1,])
 
-sim_results <- list(sim_store = simulation_storage,
+
+sim_results <- list(sim_store = storage_simulations,
                     summary = summary_df, 
                     values = values,
                     file = filename)
