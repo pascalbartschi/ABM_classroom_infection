@@ -235,7 +235,7 @@ simulate_university <- function(beta = 0.001,             # functional infection
   # one class is randomly filled, people which are sick go home, but are counted for infection probability (sick F, home T)
   # people that are infected are counted in attendance (sick T, home F) in next class infect, and go home and so on
   ###
-  if (viral_radius <= room_spacing * 2**0.5){stop("Please put viral radius > room_spacing, otherwise nobody is affected")}
+  if (viral_radius < room_spacing * 2**0.5){stop("Please put viral radius > room_spacing, otherwise nobody is affected")}
   else if (viral_radius == room_spacing){warning("Only direct neighbours, not diagonal neighbours can be infected.")}
   ## students
   # number

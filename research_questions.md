@@ -1,6 +1,5 @@
 ### Model Assumptions
 
-* After 7 days
 
 
 ### Research Question Ideas

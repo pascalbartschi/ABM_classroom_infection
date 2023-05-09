@@ -13,12 +13,12 @@ source("ABM_irchel_pandemic.R")
 # initialize
 # model dimensions
 beta <- 1e-1      # only magnitude of .1 seems realistic
-no_of_rooms <- 4  # controls total number of classrooms
+no_of_rooms <- 8  # controls total number of classrooms
 room_size <- 25   # hyperparameter, square number please
-room_spacing <- 0.9 # hyperparameter: MUST BE <=1
-days <- 31       # controls number of students
-classes_per_day <- 3 # controls randomness
-week_init_stu_ratio <- 0.01  # how many students come in sick from weekend
+room_spacing <- 1.0 # hyperparameter: MUST BE <=1
+days <- 62       # controls number of students
+classes_per_day <- 1 # controls randomness
+week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
 
