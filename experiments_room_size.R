@@ -18,10 +18,10 @@ classes_per_day <- 1 # controls randomness
 week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
-filename <- "room_size_16to49"
-values <- c(4**2, 5**2, 6**2, 7**2)
+filename <- "room_size_4to196_100sims"
+values <- seq(2, 14, by = 1)**2
 number_of_values <- length(values)
-number_of_sims_per_value <- 10
+number_of_sims_per_value <- 100
 
 ########################## DO NOT CHANGE ANYTHING BELOW HERE ######################################
 

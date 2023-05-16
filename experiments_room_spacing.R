@@ -18,10 +18,10 @@ classes_per_day <- 1 # controls randomness
 week_init_stu_ratio <- 0.03  # how many students come in sick from weekend
 viral_radius <- 2**0.5# viral radius relative to room spacing hardcode to become vrf * 1/spacing
 
-filename <- "room_spacing_0.3to0.9by0.3"
-values <- seq(0.3, 0.9, by = 0.3) #c(0.95, 0.8, 0.6)
+filename <- "room_spacing_0.1to1by0.1_100sim"
+values <- seq(0.1, 1, by = 0.1) #c(0.95, 0.8, 0.6)
 number_of_values <- length(values)
-number_of_sims_per_value <- 10
+number_of_sims_per_value <- 100
 
 ########################## DO NOT CHANGE ANYTHING BELOW HERE ######################################
 
@@ -78,7 +78,7 @@ for (i in 1:number_of_values) {
                 FUN = mean) / (room_size * no_of_rooms) * 100 # in percent
   stds <- apply(X = as.matrix(temp_store_sim %>% select(starts_with("sim"))),
                 MARGIN = c(1), 
-                FUN = std) / (room_size * no_of_rooms) * 100 # in percent
+                FUN = sd) / (room_size * no_of_rooms) * 100 # in percent
   
   storage_simulations <- cbind(means, stds, storage_simulations)
   colnames(storage_simulations)[1:2] <- c(paste0("sim_", values[i], "_mean"), paste0("sim_", values[i], "_std"))
