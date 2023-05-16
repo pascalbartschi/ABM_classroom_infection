@@ -76,6 +76,26 @@ fig2b <- plt_res_spacing %>%
   theme_bw()
 
 ## figure 3: infection per area at different room spacing and room sizes
+# mean per week per m^2 vs area
+fig3a <- results_room$summary %>%
+  mutate(people = seq(2, 14, by = 1)**2 * 8) %>% # people per room * rooms
+  ggplot(mapping = aes(x = people, y = mean_week / people)) + 
+  geom_errorbar(mapping = aes(ymin = mean_week / people - sd_week / people,
+                              ymax = mean_week / people + sd_week / people),
+                width = 0.2) +
+  labs(x = "area", y = expression(bar(infections) / week / people)) +
+  geom_point() + 
+  theme_bw()
+
+# mean per week per person vs area
+fig3b <- results_spacing$summary %>%
+  filter(area > 2) %>%
+  ggplot(mapping = aes(x = area, y = mean_week / area)) + 
+  geom_errorbar(mapping = aes(ymin = mean_week / area - sd_week / area,
+                              ymax = mean_week / area + sd_week / area),
+                width = 0.2) +
+  labs(x = "area", y = expression(bar(infections) / week / person)) +
+  geom_point()
 
 
 
