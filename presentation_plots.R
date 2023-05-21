@@ -34,7 +34,7 @@ mean_sd <- results_spacing$sim_store %>%
   gather(key = "std_val", value = "sd_appereance", -c(day, class))
 
 plt_res_spacing <- cbind(mean_app, mean_sd %>% select(-c(day, class))) %>% 
-  mutate("room_spacing" = sub("sim_(\\d+)_mean", "spacing \\1", mean_val))
+  mutate("room_spacing" = sub("sim_(\\d+(\\.\\d+)?)_mean", "spacing \\1", mean_val))
 
 ## first plot: show dynamics of model
 fig1 <- plt_res_spacing %>%
@@ -76,6 +76,42 @@ fig2b <- plt_res_spacing %>%
   theme_bw()
 
 ## figure 3: infection per area at different room spacing and room sizes
+# mean per week per m^2 vs area
+fig3a <- results_room$summary %>%
+  mutate(area = seq(2, 14, by = 1)**2 * 8) %>% # area per room * rooms
+  ggplot(mapping = aes(x = value, y = mean_week / area)) + 
+  geom_errorbar(mapping = aes(ymin = mean_week / area - sd_week / area,
+                              ymax = mean_week / area + sd_week / area),
+                width = 0.2) +
+  labs(x = "students/room", y = expression(bar(infections) / week / area)) +
+  geom_point() + 
+  theme_bw()
+
+# mean per week per person vs area
+fig3b <- results_spacing$summary %>%
+  filter(area > 2) %>%
+  ggplot(mapping = aes(x = value, y = mean_week / area)) + 
+  geom_errorbar(mapping = aes(ymin = mean_week / area - sd_week / area,
+                              ymax = mean_week / area + sd_week / area),
+                width = 0.01) +
+  labs(x = "space between students", y = expression(bar(infections) / week / area)) +
+  geom_point() + 
+  theme_bw()
+
+# save the figures
+if (!dir.exists("figures")){dir.create("figures")}
+w = 30
+h = 10
+ggsave(filename = "figures/figure1_overall_dynamics.png", 
+       plot = fig1, width = w, height = h, units = "cm")
+ggsave(filename = "figures/figure2a_students_per_room_dynamics.png", 
+       plot = fig2a, width = w, height = h, units = "cm")
+ggsave(filename = "figures/figure2b_spacing_students_dynamics.png", 
+       plot = fig2b, width = w, height = h, units = "cm")
+ggsave(filename = "figures/figure3a_students_per_room_conclusion.png", 
+       plot = fig3a, width = w, height = h, units = "cm")
+ggsave(filename = "figures/figure3b_spacing_students_conclusion.png", 
+       plot = fig3b, width = w, height = h, units = "cm")
 
 
 
