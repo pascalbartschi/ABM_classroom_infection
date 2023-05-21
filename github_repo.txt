@@ -1,0 +1,2 @@
+Group Members: Jule Greshake, Laura Dikhoff and Pascal Bärtschi
+GitHub Repo: https://github.com/pascalbartschi/ABM_classroom_infection
